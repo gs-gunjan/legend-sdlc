@@ -110,7 +110,7 @@ public class GitLabOidcSession extends BaseCommonProfileSession<OidcProfile> imp
     @Override
     public boolean shouldRefreshToken()
     {
-        return this.tokenManager.shouldRefreshToken()
+        return this.tokenManager.shouldRefreshToken();
     }
 
     @Override
