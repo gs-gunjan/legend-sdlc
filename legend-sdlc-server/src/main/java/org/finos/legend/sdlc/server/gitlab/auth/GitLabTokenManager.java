@@ -124,7 +124,7 @@ class GitLabTokenManager implements Serializable
 
     public boolean shouldRefreshToken()
     {
-        return this.tokenExpiry == null || LocalDateTime.now().isAfter(this.tokenExpiry);
+        return LocalDateTime.now().isAfter(this.tokenExpiry);
     }
 
     boolean gitLabOAuthCallback(String code)
