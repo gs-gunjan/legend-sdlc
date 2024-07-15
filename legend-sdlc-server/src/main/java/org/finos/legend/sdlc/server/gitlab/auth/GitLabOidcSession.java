@@ -92,25 +92,25 @@ public class GitLabOidcSession extends BaseCommonProfileSession<OidcProfile> imp
     @Override
     public void setRefreshToken(String refreshToken)
     {
-        this.tokenManager.setRefreshToken(refreshToken);
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
     public String getRefreshToken()
     {
-        return this.tokenManager.getRefreshToken();
+        return null;
     }
 
     @Override
     public void setTokenExpiry(long expiresInSecs)
     {
-        this.tokenManager.setTokenExpiry(expiresInSecs);
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
     public boolean shouldRefreshToken()
     {
-        return this.tokenManager.shouldRefreshToken();
+        return false;
     }
 
     @Override
