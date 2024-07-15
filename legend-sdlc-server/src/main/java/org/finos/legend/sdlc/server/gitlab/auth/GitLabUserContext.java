@@ -155,15 +155,13 @@ public class GitLabUserContext extends UserContext
             {
                 try
                 {
-                    GitLabTokenResponse tokenResponse = authorizerManager.authorize(session, this.appInfo);
-                    if (tokenResponse.getAccessToken() == null)
+                    GitLabToken token = authorizerManager.authorize(session, this.appInfo).getAccessToken();
+                    if (token == null)
                     {
                         return false;
                     }
                     // If we can get the token, then the mode is authorized. But since we have it, we might as well save it.
-                    gitLabSession.setGitLabToken(tokenResponse.getAccessToken());
-                    gitLabSession.setRefreshToken(tokenResponse.getRefreshToken());
-                    gitLabSession.setTokenExpiry(tokenResponse.getExpiresInSecs());
+                    gitLabSession.setGitLabToken(token);
                     LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
                 }
                 catch (GitLabAuthFailureException | GitLabOAuthAuthenticator.UserInputRequiredException e)
