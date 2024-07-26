@@ -152,7 +152,7 @@ class GitLabTokenManager implements Serializable
             builder.putString(token.getTokenType().toString());
             builder.putString(token.getToken());
             builder.putString(this.refreshToken);
-            builder.putString(this.tokenExpiry != null ? this.tokenExpiry.toString(): null);
+            builder.putString(this.tokenExpiry != null ? this.tokenExpiry.toString() : null);
         }
         return builder;
     }
