@@ -14,7 +14,7 @@
 
 package org.finos.legend.sdlc.test.junit;
 
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
+import org.finos.legend.engine.protocol.pure.m3.PackageableElement;
 import org.finos.legend.sdlc.generation.GeneratorTemplate;
 import org.finos.legend.sdlc.generation.JavaCodeGenerator;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
@@ -27,6 +27,8 @@ import java.util.Formatter;
 class AbstractTestClassGenerator extends JavaCodeGenerator
 {
     private static final String ENTITY_PATH_PARAM = "entityPath";
+
+    private static final String TEST_SKIP_TOKEN = "$";
 
     private final String packagePrefix;
 
@@ -64,7 +66,12 @@ class AbstractTestClassGenerator extends JavaCodeGenerator
 
     private String generateTestClassName(PackageableElement protocolElement)
     {
-        return appendJavaIdentifier(new StringBuilder(TEST_PREFIX), generateTestName(protocolElement.name)).toString();
+        return sanitizeTestName(appendJavaIdentifier(new StringBuilder(TEST_PREFIX), generateTestName(protocolElement.name)).toString());
+    }
+
+    private String sanitizeTestName(String name)
+    {
+        return name.replace(TEST_SKIP_TOKEN, "");
     }
 
     private String generateTestName(String name)
@@ -87,10 +94,10 @@ class AbstractTestClassGenerator extends JavaCodeGenerator
 
     private StringBuilder appendJavaIdentifier(StringBuilder builder, String string)
     {
-        char replacement = '$';
+        char replacement = '_';
         if (string.isEmpty())
         {
-            return builder.append(replacement);
+            return builder.append(replacement).append(replacement);
         }
         if (SourceVersion.isKeyword(string))
         {

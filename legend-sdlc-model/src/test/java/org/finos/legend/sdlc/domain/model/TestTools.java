@@ -149,12 +149,19 @@ public class TestTools
         content.put("name", name);
         content.put("package", pkg);
         content.put("properties", (properties == null) ? Collections.emptyList() : properties);
-        content.put("superTypes", ((superTypes == null) || superTypes.isEmpty()) ? Collections.singletonList(ANY) : superTypes);
         return Entity.newEntity(
                 pkg + EntityPaths.PACKAGE_SEPARATOR + name,
                 "meta::pure::metamodel::type::Class",
                 content
         );
+    }
+
+    public static Map<String, String> newSuperType(String superType)
+    {
+        Map<String, String> content = new HashMap<>(2);
+        content.put("path", superType);
+        content.put("type", "CLASS");
+        return content;
     }
 
     public static Entity newEnumerationEntity(String name, String pkg, String... values)
@@ -175,8 +182,18 @@ public class TestTools
     {
         Map<String, Object> map = new HashMap<>(3);
         map.put("name", name);
-        map.put("type", type);
+        map.put("genericType", newGenericType(type));
         map.put("multiplicity", newMultiplicity(minMult, maxMult));
+        return map;
+    }
+
+    private static Map<String, ?> newGenericType(String type)
+    {
+        Map<String, Object> packMap = new HashMap<>(3);
+        packMap.put("_type", "packageableType");
+        packMap.put("fullPath", type);
+        Map<String, Object> map = new HashMap<>(3);
+        map.put("rawType", packMap);
         return map;
     }
 

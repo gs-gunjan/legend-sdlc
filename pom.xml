@@ -20,13 +20,13 @@
     <parent>
         <groupId>org.finos</groupId>
         <artifactId>finos</artifactId>
-        <version>4</version>
+        <version>7</version>
     </parent>
 
     <name>Legend SDLC</name>
     <groupId>org.finos.legend.sdlc</groupId>
     <artifactId>legend-sdlc</artifactId>
-    <version>0.166.1-SNAPSHOT</version>
+    <version>0.200.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -68,11 +68,12 @@
         <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
         <maven.compiler.release>8</maven.compiler.release>
         <java.version.range>[11,12),[17,18),[21,22)</java.version.range>
+        <publish.server.id>central</publish.server.id>
 
         <!-- Legend dependency versions -->
-        <legend.engine.version>4.49.1</legend.engine.version>
-        <legend.pure.version>5.9.0</legend.pure.version>
-        <legend.shared.version>0.25.4</legend.shared.version>
+        <legend.engine.version>4.93.0</legend.engine.version>
+        <legend.pure.version>5.52.4</legend.pure.version>
+        <legend.shared.version>0.27.0</legend.shared.version>
 
         <!-- Dependency versions -->
         <commons-codec.version>1.15</commons-codec.version>
@@ -103,8 +104,9 @@
         <json-smart.version>2.4.7</json-smart.version>
         <junit.version>4.13.1</junit.version>
         <maven.version>3.9.2</maven.version>
-        <pac4j.version>3.8.3</pac4j.version>
-        <slf4j.version>1.7.25</slf4j.version>
+        <pac4j.version>4.5.8</pac4j.version>
+        <pac4j.jax-rs.version>4.0.0</pac4j.jax-rs.version>
+        <slf4j.version>1.7.36</slf4j.version>
         <snakeyaml.version>1.33</snakeyaml.version>
 
         <!-- Plugin versions -->
@@ -136,7 +138,6 @@
                     <artifactId>dockerfile-maven-plugin</artifactId>
                     <version>1.4.13</version>
                 </plugin>
-
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-checkstyle-plugin</artifactId>
@@ -243,6 +244,15 @@
         </pluginManagement>
 
         <plugins>
+           <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                     <autoPublish>true</autoPublish>
+                    <waitUntil>published</waitUntil>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
@@ -294,16 +304,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                </configuration>
-            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
@@ -622,7 +623,7 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
-                <artifactId>legend-engine-xt-relationalStore-pure</artifactId>
+                <artifactId>legend-engine-xt-relationalStore-core-pure</artifactId>
                 <version>${legend.engine.version}</version>
                 <exclusions>
                     <exclusion>
@@ -698,9 +699,9 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>org.finos.legend.pure</groupId>
-                <artifactId>legend-pure-runtime-java-extension-compiled-functions-json</artifactId>
-                <version>${legend.pure.version}</version>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-pure-runtime-java-extension-compiled-functions-json</artifactId>
+                <version>${legend.engine.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.antlr</groupId>
@@ -840,6 +841,32 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-xt-functionJar-protocol</artifactId>
+                <version>${legend.engine.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-xt-functionJar-generation</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-xt-functionJar-pure</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-pure-platform-java</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-test-runner-shared</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
@@ -851,6 +878,11 @@
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-test-runner-service</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-test-runner-function</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
             <dependency>
@@ -928,6 +960,12 @@
                 <artifactId>legend-engine-external-format-jsonSchema</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-xts-deployment-model</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+
             <!-- External dependencies -->
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
@@ -998,7 +1036,7 @@
             <dependency>
                 <groupId>com.nimbusds</groupId>
                 <artifactId>oauth2-oidc-sdk</artifactId>
-                <version>6.5</version>
+                <version>8.22</version>
             </dependency>
 
             <dependency>
@@ -1246,6 +1284,12 @@
             </dependency>
 
             <dependency>
+                <groupId>org.checkerframework</groupId>
+                <artifactId>checker-qual</artifactId>
+                <version>3.49.0</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.codehaus.plexus</groupId>
                 <artifactId>plexus-classworlds</artifactId>
                 <version>2.7.0</version>
@@ -1394,7 +1438,7 @@
             <dependency>
                 <groupId>org.pac4j.jax-rs</groupId>
                 <artifactId>core</artifactId>
-                <version>3.0.0</version>
+                <version>${pac4j.jax-rs.version}</version>
             </dependency>
 
             <dependency>
@@ -1423,24 +1467,22 @@
                 <artifactId>freemarker</artifactId>
                 <version>${freemarker.version}</version>
             </dependency>
+
+            <!-- Override transitive dependencies to force same version everywhere -->
+            <dependency>
+                <groupId>com.github.tomakehurst</groupId>
+                <artifactId>wiremock-jre8</artifactId>
+                <version>2.35.2</version>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.xml.bind</groupId>
+                <artifactId>jakarta.xml.bind-api</artifactId>
+                <version>2.3.3</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
-    <repositories>
-        <repository>
-            <id>ossrh</id>
-            <name>OSSRH Public Group</name>
-            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>ossrh-releases</id>
-            <name>OSSRH Public Releases Group</name>
-            <url>https://s01.oss.sonatype.org/content/repositories/releases/</url>
-        </repository>
-    </repositories>
+
 
     <profiles>
         <profile>

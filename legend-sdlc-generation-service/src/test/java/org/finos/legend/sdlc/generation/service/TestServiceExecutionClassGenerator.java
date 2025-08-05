@@ -26,8 +26,9 @@ import org.finos.legend.engine.language.pure.dsl.service.execution.AbstractServi
 import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunner;
 import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunnerInput;
 import org.finos.legend.engine.plan.platform.java.JavaSourceHelper;
+import org.finos.legend.engine.protocol.pure.m3.PackageableElement;
+import org.finos.legend.engine.protocol.pure.m3.valuespecification.constant.PackageableType;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
 import org.finos.legend.engine.shared.core.url.StreamProvider;
@@ -46,6 +47,11 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import javax.tools.DiagnosticCollector;
+import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
+import javax.tools.SimpleJavaFileObject;
+import javax.tools.ToolProvider;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -63,11 +69,6 @@ import java.time.temporal.Temporal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.SimpleJavaFileObject;
-import javax.tools.ToolProvider;
 
 public class TestServiceExecutionClassGenerator
 {
@@ -193,9 +194,9 @@ public class TestServiceExecutionClassGenerator
         MutableMap<String, Enumeration<? extends Enum>> enumerations = Maps.mutable.empty();
         ((PureExecution) service.execution).func.parameters.forEach(p ->
         {
-            if (!PrimitiveUtilities.isPrimitiveTypeName(p._class))
+            if (!PrimitiveUtilities.isPrimitiveTypeName(((PackageableType)p.genericType.rawType).fullPath))
             {
-                enumerations.getIfAbsentPut(p._class, () -> PURE_MODEL.getEnumeration(p._class, null));
+                enumerations.getIfAbsentPut(((PackageableType)p.genericType.rawType).fullPath, () -> PURE_MODEL.getEnumeration(((PackageableType)p.genericType.rawType).fullPath, null));
             }
         });
         for (Pair<String, Enumeration<? extends Enum>> pair : enumerations.keyValuesView())

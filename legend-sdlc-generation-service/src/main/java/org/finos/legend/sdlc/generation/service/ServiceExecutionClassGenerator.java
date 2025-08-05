@@ -21,13 +21,16 @@ import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.set.MutableSet;
 import org.finos.legend.engine.plan.platform.java.JavaSourceHelper;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Multiplicity;
+import org.finos.legend.engine.protocol.pure.m3.function.LambdaFunction;
+import org.finos.legend.engine.protocol.functionJar.metamodel.FunctionJar;
+import org.finos.legend.engine.protocol.pure.m3.multiplicity.Multiplicity;
+import org.finos.legend.engine.protocol.pure.m3.valuespecification.Variable;
+import org.finos.legend.engine.protocol.pure.m3.valuespecification.constant.PackageableType;
+import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Execution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureMultiExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
-import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.Variable;
-import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.Lambda;
 import org.finos.legend.sdlc.generation.GeneratorTemplate;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
@@ -71,6 +74,18 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
         return this;
     }
 
+    public ServiceExecutionClassGenerator withFunctionJar(FunctionJar functionJar, PureModelContextData pureModelContextData)
+    {
+        setPackageName(getJavaPackageName(functionJar._package));
+        setClassName(getJavaClassName(functionJar.name));
+        setParameter(SERVICE_PARAM, functionJar);
+        MutableList<ExecutionParameter> executionParameters = getExecutionParameters(functionJar, pureModelContextData);
+        setParameter(STREAM_PROVIDER_PARAMETER_NAME_PARAM, getStreamProviderParameterName(executionParameters));
+        setParameter(IMPORTS_PARAM, getImports(executionParameters));
+        setParameter(EXEC_PARAMS_PARAM, executionParameters);
+        return this;
+    }
+
     private MutableList<String> getImports(MutableList<ExecutionParameter> executionParameters)
     {
         // TODO add imports for non-primitives when possible
@@ -80,28 +95,9 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
         return imports.collect(Class::getName, Lists.mutable.ofInitialCapacity(imports.size())).sortThis();
     }
 
-    private MutableList<ExecutionParameter> getExecutionParameters(Service service)
+    private MutableList<ExecutionParameter> getParameters(List<Variable> functionParameters, MutableList<ExecutionParameter> parameters, MutableSet<String> javaParameterNames)
     {
-        Execution execution = service.execution;
-        if (!(execution instanceof PureExecution))
-        {
-            throw new IllegalArgumentException("Only services with Pure executions are supported: " + service.getPath());
-        }
-        Lambda lambda = ((PureExecution) execution).func;
-        MutableList<ExecutionParameter> parameters = Lists.mutable.ofInitialCapacity(lambda.parameters.size() + 1);
-        MutableSet<String> javaParameterNames = Sets.mutable.ofInitialCapacity(lambda.parameters.size() + 1);
-        if (execution instanceof PureMultiExecution)
-        {
-            PureMultiExecution multiExec = (PureMultiExecution) execution;
-            if (multiExec.executionParameters != null && !multiExec.executionParameters.isEmpty())
-            {
-                String executionKey = multiExec.executionKey;
-                String javaParameterName = JavaSourceHelper.toValidJavaIdentifier(executionKey);
-                javaParameterNames.add(javaParameterName);
-                parameters.add(newExecutionParameter(new Variable(executionKey, "String", new Multiplicity(1, 1)), javaParameterName));
-            }
-        }
-        for (Variable legendParameter : lambda.parameters)
+        for (Variable legendParameter : functionParameters)
         {
             String javaParameterName = JavaSourceHelper.toValidJavaIdentifier(legendParameter.name);
             if (!javaParameterNames.add(javaParameterName))
@@ -118,6 +114,39 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
             parameters.add(newExecutionParameter(legendParameter, javaParameterName));
         }
         return parameters;
+    }
+
+
+    private MutableList<ExecutionParameter> getExecutionParameters(FunctionJar functionJar, PureModelContextData pureModelContextData)
+    {
+        List<Variable> functionJarParameters = ServiceExecutionGenerator.getFunctionJarParameters(functionJar, pureModelContextData);
+        MutableList<ExecutionParameter> parameters = Lists.mutable.ofInitialCapacity(functionJarParameters.size() + 1);
+        MutableSet<String> javaParameterNames = Sets.mutable.ofInitialCapacity(functionJarParameters.size() + 1);
+        return getParameters(functionJarParameters, parameters, javaParameterNames);
+    }
+
+    private MutableList<ExecutionParameter> getExecutionParameters(Service service)
+    {
+        Execution execution = service.execution;
+        if (!(execution instanceof PureExecution))
+        {
+            throw new IllegalArgumentException("Only services with Pure executions are supported: " + service.getPath());
+        }
+        LambdaFunction lambda = ((PureExecution) execution).func;
+        MutableList<ExecutionParameter> parameters = Lists.mutable.ofInitialCapacity(lambda.parameters.size() + 1);
+        MutableSet<String> javaParameterNames = Sets.mutable.ofInitialCapacity(lambda.parameters.size() + 1);
+        if (execution instanceof PureMultiExecution)
+        {
+            PureMultiExecution multiExec = (PureMultiExecution) execution;
+            if (multiExec.executionParameters != null && !multiExec.executionParameters.isEmpty())
+            {
+                String executionKey = multiExec.executionKey;
+                String javaParameterName = JavaSourceHelper.toValidJavaIdentifier(executionKey);
+                javaParameterNames.add(javaParameterName);
+                parameters.add(newExecutionParameter(new Variable(executionKey, "String", new Multiplicity(1, 1)), javaParameterName));
+            }
+        }
+        return getParameters(lambda.parameters, parameters, javaParameterNames);
     }
 
     private ExecutionParameter newExecutionParameter(Variable variable, String javaParamName)
@@ -152,13 +181,13 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
         }
 
         StringBuilder builder = appendPackagePrefixIfPresent(new StringBuilder());
-        EntityPaths.forEachPathElement(variable._class, name -> ((builder.length() == 0) ? builder : builder.append('.')).append(JavaSourceHelper.toValidJavaIdentifier(name)));
+        EntityPaths.forEachPathElement(((PackageableType)variable.genericType.rawType).fullPath, name -> ((builder.length() == 0) ? builder : builder.append('.')).append(JavaSourceHelper.toValidJavaIdentifier(name)));
         return builder.toString();
     }
 
     private static Class<?> getVariableJavaClass(Variable variable, boolean usePrimitive)
     {
-        switch (variable._class)
+        switch (((PackageableType)variable.genericType.rawType).fullPath)
         {
             case "String":
             {
@@ -267,7 +296,7 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
 
         StringBuilder appendTypeString(StringBuilder builder)
         {
-            return ("Byte".equals(variable._class) || !getMultiplicity().isUpperBoundGreaterThan(1)) ?
+            return ("Byte".equals(((PackageableType)variable.genericType.rawType).fullPath) || !getMultiplicity().isUpperBoundGreaterThan(1)) ?
                     builder.append(this.javaParamRawType) :
                     builder.append("List<? extends ").append(this.javaParamRawType).append('>');
         }

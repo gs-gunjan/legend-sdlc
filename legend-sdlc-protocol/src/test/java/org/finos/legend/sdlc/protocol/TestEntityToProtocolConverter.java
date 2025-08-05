@@ -14,15 +14,15 @@
 
 package org.finos.legend.sdlc.protocol;
 
-import org.eclipse.collections.impl.utility.ListIterate;
+import org.finos.legend.engine.protocol.pure.m3.type.Class;
 import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Class;
 import org.finos.legend.sdlc.domain.model.TestTools;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -77,7 +77,10 @@ public class TestEntityToProtocolConverter
         Assert.assertEquals(CLASS_CLASSIFIER_PATH, entity.getClassifierPath());
         Assert.assertEquals(entity.getContent().get("name"), cls.name);
         Assert.assertEquals(entity.getContent().get("package"), cls._package);
-        Assert.assertEquals(entity.getContent().get("superTypes"), cls.superTypes.stream().map(x -> x.path).collect(Collectors.toList()));
+        if (entity.getContent().get("superTypes") != null)
+        {
+            Assert.assertEquals(((List<Map<String, ?>>) entity.getContent().get("superTypes")).stream().map(e -> e.get("path")).collect(Collectors.toList()), cls.superTypes.stream().map(x -> x.path).collect(Collectors.toList()));
+        }
         Assert.assertEquals(((Collection<?>) entity.getContent().get("properties")).stream().map(m -> ((Map<?, ?>) m).get("name")).collect(Collectors.toList()),
                 cls.properties.stream().map(p -> p.name).collect(Collectors.toList()));
     }
